@@ -11,6 +11,7 @@ public record NotificationResponseDTO(
     String message,
     String eventType,
     boolean read,
+    boolean ticketEnabled,
     LocalDateTime createdAt
 ) {
     public static NotificationResponseDTO fromEntity(Notification notification) {
@@ -22,6 +23,7 @@ public record NotificationResponseDTO(
             notification.getMessage(),
             notification.getEventType(),
             notification.isRead(),
+            notification.isTicketEnabled(),
             notification.getCreatedAt()
         );
     }
