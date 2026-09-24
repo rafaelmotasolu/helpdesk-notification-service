@@ -6,6 +6,7 @@ import com.solutis.projeto.helpdesk_notification_service.repository.Notification
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -49,14 +49,14 @@ class NotificationServiceTest {
         Notification notification = new Notification(1L, 2L, "Título", "Mensagem", "TICKET_CREATED", true);
         Page<Notification> page = new PageImpl<>(List.of(notification));
 
-        when(notificationRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+        when(notificationRepository.findAll(ArgumentMatchers.<Specification<Notification>>any(), eq(pageable))).thenReturn(page);
 
         Page<NotificationResponseDTO> result = notificationService.findAll(2L, "ativados", pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertTrue(result.getContent().get(0).ticketEnabled());
-        verify(notificationRepository).findAll(any(Specification.class), eq(pageable));
+        verify(notificationRepository).findAll(ArgumentMatchers.<Specification<Notification>>any(), eq(pageable));
     }
 
     @Test
@@ -66,14 +66,14 @@ class NotificationServiceTest {
         Notification disabledNotification = new Notification(1L, 2L, "Título", "Mensagem", "TICKET_CREATED", false);
         Page<Notification> page = new PageImpl<>(List.of(disabledNotification));
 
-        when(notificationRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+        when(notificationRepository.findAll(ArgumentMatchers.<Specification<Notification>>any(), eq(pageable))).thenReturn(page);
 
         Page<NotificationResponseDTO> result = notificationService.findAll(null, "desativados", pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertFalse(result.getContent().get(0).ticketEnabled());
-        verify(notificationRepository).findAll(any(Specification.class), eq(pageable));
+        verify(notificationRepository).findAll(ArgumentMatchers.<Specification<Notification>>any(), eq(pageable));
     }
 
     @Test
