@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
     name = "tb_notifications",
     indexes = {
         @Index(name = "idx_notification_user_id", columnList = "user_id"),
+        @Index(name = "idx_notification_customer_id", columnList = "customer_id"),
+        @Index(name = "idx_notification_recipient_role", columnList = "recipient_role"),
         @Index(name = "idx_notification_ticket_id", columnList = "ticket_id"),
         @Index(name = "idx_notification_created_at", columnList = "created_at"),
         @Index(name = "idx_notification_ticket_enabled", columnList = "ticket_enabled")
@@ -22,8 +24,14 @@ public class Notification {
     @Column(name = "ticket_id", nullable = false)
     private Long ticketId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private Long userId;
+
+    @Column(name = "customer_id")
+    private Long customerId;
+
+    @Column(name = "recipient_role", length = 30)
+    private String recipientRole;
 
     @Column(nullable = false, length = 150)
     private String title;
@@ -46,12 +54,18 @@ public class Notification {
     public Notification() {}
 
     public Notification(Long ticketId, Long userId, String title, String message, String eventType) {
-        this(ticketId, userId, title, message, eventType, true);
+        this(ticketId, userId, null, null, title, message, eventType, true);
     }
 
     public Notification(Long ticketId, Long userId, String title, String message, String eventType, boolean ticketEnabled) {
+        this(ticketId, userId, null, null, title, message, eventType, ticketEnabled);
+    }
+
+    public Notification(Long ticketId, Long userId, Long customerId, String recipientRole, String title, String message, String eventType, boolean ticketEnabled) {
         this.ticketId = ticketId;
         this.userId = userId;
+        this.customerId = customerId;
+        this.recipientRole = recipientRole;
         this.title = title;
         this.message = message;
         this.eventType = eventType;
@@ -73,6 +87,12 @@ public class Notification {
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+
+    public Long getCustomerId() { return customerId; }
+    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+
+    public String getRecipientRole() { return recipientRole; }
+    public void setRecipientRole(String recipientRole) { this.recipientRole = recipientRole; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }

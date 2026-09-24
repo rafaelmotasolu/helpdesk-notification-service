@@ -28,15 +28,31 @@ public class TicketEventConsumer {
     public void handleTicketCreated(TicketCreatedEvent event) {
         log.info("Processando TicketCreatedEvent para Ticket #{}", event.ticketId());
         
-        Notification notification = new Notification(
+        // 1. Notifica o cliente que abriu o chamado
+        Notification clientNotification = new Notification(
             event.ticketId(),
             event.customerId(),
+            event.customerId(),
+            null,
             "Chamado Aberto com Sucesso",
             String.format("Seu chamado '%s' foi registrado com prioridade %s.", event.title(), event.priority()),
             "TICKET_CREATED",
             event.ticketEnabled()
         );
-        notificationService.create(notification);
+        notificationService.create(clientNotification);
+
+        // 2. Notifica todos os técnicos disponíveis sobre o novo chamado sem técnico
+        Notification techNotification = new Notification(
+            event.ticketId(),
+            null,
+            event.customerId(),
+            "TECHNICIAN",
+            "Novo Chamado Disponível",
+            String.format("O chamado #%d ('%s') foi aberto e está aguardando atendimento.", event.ticketId(), event.title()),
+            "TICKET_CREATED_UNASSIGNED",
+            event.ticketEnabled()
+        );
+        notificationService.create(techNotification);
     }
 
     @RabbitHandler
@@ -47,9 +63,12 @@ public class TicketEventConsumer {
         Notification clientNotification = new Notification(
             event.ticketId(),
             event.customerId(),
+            event.customerId(),
+            null,
             "Técnico Atribuído ao seu Chamado",
             String.format("Um técnico foi designado para atender o chamado '%s'.", event.ticketTitle()),
-            "TICKET_ASSIGNED"
+            "TICKET_ASSIGNED",
+            true
         );
         notificationService.create(clientNotification);
 
@@ -58,9 +77,12 @@ public class TicketEventConsumer {
             Notification techNotification = new Notification(
                 event.ticketId(),
                 event.technicianId(),
+                event.customerId(),
+                null,
                 "Novo Chamado Atribuído a Você",
                 String.format("Você foi designado responsável pelo chamado #%d: '%s'.", event.ticketId(), event.ticketTitle()),
-                "TICKET_ASSIGNED_TECH"
+                "TICKET_ASSIGNED_TECH",
+                true
             );
             notificationService.create(techNotification);
         }
@@ -70,14 +92,34 @@ public class TicketEventConsumer {
     public void handleTicketStatusChanged(TicketStatusChangedEvent event) {
         log.info("Processando TicketStatusChangedEvent para Ticket #{}", event.ticketId());
 
+        // 1. Notifica o cliente
         Notification clientNotification = new Notification(
             event.ticketId(),
             event.customerId(),
+            event.customerId(),
+            null,
             "Status do Chamado Atualizado",
             String.format("O status do seu chamado '%s' mudou de %s para %s.", 
                 event.ticketTitle(), event.oldStatus(), event.newStatus()),
-            "TICKET_STATUS_CHANGED"
+            "TICKET_STATUS_CHANGED",
+            true
         );
         notificationService.create(clientNotification);
+
+        // 2. Notifica o técnico responsável, se atribuído e diferente do cliente
+        if (event.technicianId() != null && !event.technicianId().equals(event.customerId())) {
+            Notification techNotification = new Notification(
+                event.ticketId(),
+                event.technicianId(),
+                event.customerId(),
+                null,
+                "Status do Chamado Atualizado",
+                String.format("O chamado #%d ('%s') teve o status atualizado para %s.",
+                    event.ticketId(), event.ticketTitle(), event.newStatus()),
+                "TICKET_STATUS_CHANGED",
+                true
+            );
+            notificationService.create(techNotification);
+        }
     }
 }

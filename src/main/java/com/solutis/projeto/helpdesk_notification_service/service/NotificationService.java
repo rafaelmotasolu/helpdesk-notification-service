@@ -37,6 +37,24 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
+    public Page<NotificationResponseDTO> findAllForUser(
+            Long currentUserId,
+            String currentRole,
+            Long filterUserId,
+            String enabledFilter,
+            Pageable pageable
+    ) {
+        Specification<Notification> spec = NotificationSpecification.withUserAndFilters(
+                currentUserId,
+                currentRole,
+                filterUserId,
+                enabledFilter
+        );
+        return notificationRepository.findAll(spec, pageable)
+                .map(NotificationResponseDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
     public NotificationResponseDTO findById(Long id) {
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notificação não encontrada com ID: " + id));
@@ -49,6 +67,13 @@ public class NotificationService {
                 .orElseThrow(() -> new RuntimeException("Notificação não encontrada com ID: " + id));
         notification.setRead(true);
         notificationRepository.save(notification);
+    }
+
+    @Transactional
+    public void markAllAsReadForUser(Long currentUserId, String currentRole) {
+        if (currentUserId != null) {
+            notificationRepository.markAllAsReadByUserId(currentUserId);
+        }
     }
 
     @Transactional
